@@ -8,6 +8,8 @@ interface Props {
   ratioFilter: string;
   ntfyTopic: string;
   onClose: () => void;
+  /** Xóa ntfy_key khỏi localStorage */
+  onClearNtfy: () => void;
   /** Trả về chuỗi lỗi (hiện toast) hoặc null nếu lưu thành công */
   onSave: (deviceId: string, ratio: string, ntfyTopic: string) => string | null;
 }
@@ -18,6 +20,7 @@ export default function SettingsModal({
   ratioFilter,
   ntfyTopic,
   onClose,
+  onClearNtfy,
   onSave,
 }: Props) {
   const [id, setId] = useState(deviceId);
@@ -74,16 +77,42 @@ export default function SettingsModal({
         />
         <div className="hint">Link không có ratio sẽ bị ẩn khi đang bật lọc.</div>
         <label htmlFor="settingsNtfy">ID phòng chat ntfy (ntfy.sh)</label>
-        <input
-          type="text"
-          id="settingsNtfy"
-          placeholder="VD: shoplink-abc123 (để trống = tắt)"
-          autoComplete="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          value={topic}
-          onChange={(e) => setTopic(e.target.value)}
-        />
+        <div style={{ display: "flex", gap: 8 }}>
+          <input
+            type="text"
+            id="settingsNtfy"
+            placeholder="VD: shoplink-abc123 (để trống = tắt)"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            value={topic}
+            onChange={(e) => setTopic(e.target.value)}
+            style={{ flex: 1, minWidth: 0 }}
+          />
+          <button
+            type="button"
+            className="settings-cancel"
+            disabled={!ntfyTopic && !topic}
+            onClick={() => {
+              setTopic("");
+              onClearNtfy();
+            }}
+            style={{
+              height: 42,
+              padding: "0 14px",
+              border: "none",
+              borderRadius: 10,
+              fontWeight: 700,
+              fontSize: 13,
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              color: "#ef4444",
+              opacity: !ntfyTopic && !topic ? 0.4 : 1,
+            }}
+          >
+            🗑 Xóa
+          </button>
+        </div>
         <div className="hint">
           Khi bấm Mở Link, tin dạng deviceId|17:50:42|0 sẽ được gửi tới phòng này
           (app QuickTimerClick). Lưu vào localStorage key ntfy_key. Chỉ gửi khi đã lưu.

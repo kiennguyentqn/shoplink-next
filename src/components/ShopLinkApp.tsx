@@ -320,6 +320,14 @@ export default function ShopLinkApp() {
     return null;
   }
 
+  function clearNtfyKey() {
+    try {
+      localStorage.removeItem(NTFY_KEY_STORAGE);
+    } catch {}
+    setNtfyTopic("");
+    showToast("Đã xóa ntfy key!");
+  }
+
   function switchTab(key: TabKey) {
     setActiveTab(key);
     setSearch("");
@@ -584,6 +592,7 @@ export default function ShopLinkApp() {
         deviceId={deviceId}
         ratioFilter={ratioFilter}
         ntfyTopic={ntfyTopic}
+        onClearNtfy={clearNtfyKey}
         onClose={() => setSettingsOpen(false)}
         onSave={saveSettings}
       />
