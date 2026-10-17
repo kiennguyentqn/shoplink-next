@@ -85,8 +85,8 @@ export default function SettingsModal({
           onChange={(e) => setTopic(e.target.value)}
         />
         <div className="hint">
-          Khi bấm Mở Link, giờ kết thúc (VD 17:50:42) sẽ được gửi tới phòng này.
-          Chỉ gửi khi đã lưu ID.
+          Khi bấm Mở Link, tin dạng deviceId|17:50:42|0 sẽ được gửi tới phòng này
+          (app QuickTimerClick). Lưu vào localStorage key ntfy_key. Chỉ gửi khi đã lưu.
         </div>
         <div className="settings-actions">
           <button type="button" className="settings-cancel" onClick={onClose}>

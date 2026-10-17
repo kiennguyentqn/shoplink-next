@@ -13,7 +13,7 @@ import {
   type TabKey,
 } from "@/lib/constants";
 import { isGenuineMobile } from "@/lib/device";
-import { formatEndTime, isValidTopic, sendNtfy } from "@/lib/ntfy";
+import { NTFY_KEY_STORAGE, isValidTopic, readNtfyKey, sendNtfy } from "@/lib/ntfy";
 import { decryptLinkPayload } from "@/lib/linkPayload";
 import {
   generateUUID,
@@ -171,7 +171,7 @@ export default function ShopLinkApp() {
     deviceIdRef.current = id;
     setDeviceId(id);
     setRatioFilter(localStorage.getItem("ratio_filter") || "");
-    setNtfyTopic(localStorage.getItem("ntfy_topic") || "");
+    setNtfyTopic(readNtfyKey());
     setInteracted(readJSON<string[]>("interacted_links", []));
 
     // Đồng hồ đếm ngược + giờ chuẩn internet
@@ -239,11 +239,9 @@ export default function ShopLinkApp() {
       if (ok && (data.url || data.payload || data.redirect_token)) {
         markInteracted(key);
 
-        // Gửi giờ kết thúc qua ntfy (chỉ khi đã lưu ID phòng)
-        if (ntfyTopic) {
-          const exp = getLinkExpiry(allLinks[key], key);
-          if (exp) await sendNtfy(ntfyTopic, formatEndTime(exp));
-        }
+        // Mở link thì đồng thời gửi giờ kết thúc (vd "17:50:42") qua ntfy — chỉ khi đã lưu key
+        // Định dạng gửi: "<deviceId>|<giờ kết thúc>|<click>", lấy giờ từ trường time của link
+        sendNtfy(deviceIdRef.current, allLinks[key]?.time);
 
         let targetUrl: string | undefined = data.url;
         if (!targetUrl && data.payload && data.t) {
@@ -299,8 +297,8 @@ export default function ShopLinkApp() {
     }
 
     setNtfyTopic(newTopic);
-    if (newTopic === "") localStorage.removeItem("ntfy_topic");
-    else localStorage.setItem("ntfy_topic", newTopic);
+    if (newTopic === "") localStorage.removeItem(NTFY_KEY_STORAGE);
+    else localStorage.setItem(NTFY_KEY_STORAGE, newTopic);
 
     setRatioFilter(newRatio);
     if (newRatio === "") localStorage.removeItem("ratio_filter");

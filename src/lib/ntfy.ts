@@ -1,32 +1,44 @@
-const TOPIC_RE = /^[A-Za-z0-9_-]{1,64}$/;
+// Gửi tin nhắn tới app QuickTimerClick (Android) qua ntfy.sh.
+// Định dạng giống SyncClient.kt:  "<deviceId>|<target>|<click>"  (publish vào https://ntfy.sh/<topic>)
+// Bên Android bỏ qua tin có deviceId trùng với máy mình, nên deviceId ở đây là ID của trình duyệt web.
 
-export function isValidTopic(topic: string): boolean {
-  return TOPIC_RE.test(topic);
+export const NTFY_KEY_STORAGE = "ntfy_key";
+export const NTFY_CLICK = "0"; // giá trị "click" gửi kèm — đổi cho đúng với ngưỡng click bên app
+
+const TOPIC_RE = /^[A-Za-z0-9_-]{1,64}$/; // ký tự ntfy cho phép trong tên topic
+
+export function isValidTopic(v: string): boolean {
+  return TOPIC_RE.test(v);
 }
 
-/** Giờ kết thúc theo giờ Việt Nam (UTC+7), dạng "17:50:42" */
-export function formatEndTime(expMs: number): string {
-  const d = new Date(expMs + 7 * 3600000);
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
-}
-
-/**
- * Gửi tin tới https://ntfy.sh/<topic>. Không bao giờ ném lỗi và chờ tối đa 1.5s
- * để không làm chậm việc mở link.
- */
-export async function sendNtfy(topic: string, message: string): Promise<void> {
-  if (!isValidTopic(topic)) return;
+export function readNtfyKey(): string {
   try {
-    await Promise.race([
-      fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
-        method: "POST",
-        body: message, // text/plain -> request đơn giản, không cần preflight
-        keepalive: true,
-      }),
-      new Promise((resolve) => setTimeout(resolve, 1500)),
-    ]);
+    return (localStorage.getItem(NTFY_KEY_STORAGE) || "").trim();
   } catch {
-    /* bỏ qua lỗi ntfy */
+    return "";
   }
+}
+
+// "01:20s - 17:50:42" -> "17:50:42" (null nếu không có giờ kết thúc)
+export function parseTargetTime(span?: string | null): string | null {
+  const m = (span || "").match(/-\s*(\d{1,2}:\d{2}:\d{2})\s*$/);
+  return m ? m[1] : null;
+}
+
+// Có key trong localStorage mới gửi. keepalive để request vẫn hoàn tất khi trang chuyển hướng sang TikTok.
+export function sendNtfy(deviceId: string, span?: string | null): string | null {
+  const topic = readNtfyKey();
+  if (!topic || !isValidTopic(topic)) return null;
+  const target = parseTargetTime(span);
+  if (!target) return null;
+
+  const message = `${deviceId}|${target}|${NTFY_CLICK}`;
+  try {
+    fetch("https://ntfy.sh/" + topic, {
+      method: "POST",
+      body: message,
+      keepalive: true,
+    }).catch(() => {});
+  } catch {}
+  return message;
 }
