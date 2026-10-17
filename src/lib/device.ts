@@ -1,11 +1,11 @@
 /**
  * Kiểm tra thiết bị di động thật (chặn PC, MacOS, F12 DevTools giả lập).
  *
- *   NEXT_PUBLIC_DEBUG_LINK=1 -> chạy toàn bộ bộ kiểm tra bên dưới
- *   NEXT_PUBLIC_DEBUG_LINK=0 -> luôn trả về true
+ *   DEVICE_GUARD=1 -> chạy toàn bộ bộ kiểm tra bên dưới
+ *   DEVICE_GUARD=0 -> luôn trả về true
  */
 export function isGenuineMobile(): boolean {
-  if (process.env.NEXT_PUBLIC_DEBUG_LINK !== "1") return true;
+  if (process.env.DEVICE_GUARD !== "1") return true;
   if (typeof window === "undefined" || typeof navigator === "undefined") {
     return true; // SSR: chưa có gì để kiểm tra
   }

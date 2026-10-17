@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Đưa DEVICE_GUARD (không có tiền tố NEXT_PUBLIC_) xuống client lúc build,
+  // để hàm isGenuineMobile() đọc được ở trình duyệt.
+  env: {
+    DEVICE_GUARD: process.env.DEVICE_GUARD ?? "0",
+  },
   async headers() {
     return [
       {
